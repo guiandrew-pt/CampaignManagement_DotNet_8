@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 25.0.1706.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerDataAPI", "CustomerDataAPI\CustomerDataAPI.csproj", "{7BDFB733-AD06-420A-BA2D-289C1E23A131}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerDataClient", "CustomerDataClient\CustomerDataClient.csproj", "{DF0F62C7-3FCE-4B7B-B800-263BE809CBBD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerDataTest", "CustomerDataTest\CustomerDataTest.csproj", "{DF8AD7BB-3A2F-404F-A3C3-F20502D82609}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerDataService", "CustomerDataService\CustomerDataService.csproj", "{D860E31C-4086-4D0D-9A8C-9B8E43C3383B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerDataDomainModels", "CustomerDataDomainModels\CustomerDataDomainModels.csproj", "{F450D42B-7BC2-48B9-A762-A39234B33973}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerDataDTOs", "CustomerDataDTOs\CustomerDataDTOs.csproj", "{3BCD11EE-BC0A-40AF-A49E-3B686BF31AAF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CustomerDataEnum", "CustomerDataEnum\CustomerDataEnum.csproj", "{B316318E-F8E4-4DB8-A7BD-9D3A5A06F4F4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7BDFB733-AD06-420A-BA2D-289C1E23A131}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BDFB733-AD06-420A-BA2D-289C1E23A131}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BDFB733-AD06-420A-BA2D-289C1E23A131}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BDFB733-AD06-420A-BA2D-289C1E23A131}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF0F62C7-3FCE-4B7B-B800-263BE809CBBD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF0F62C7-3FCE-4B7B-B800-263BE809CBBD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF0F62C7-3FCE-4B7B-B800-263BE809CBBD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF0F62C7-3FCE-4B7B-B800-263BE809CBBD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF8AD7BB-3A2F-404F-A3C3-F20502D82609}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF8AD7BB-3A2F-404F-A3C3-F20502D82609}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF8AD7BB-3A2F-404F-A3C3-F20502D82609}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF8AD7BB-3A2F-404F-A3C3-F20502D82609}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D860E31C-4086-4D0D-9A8C-9B8E43C3383B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D860E31C-4086-4D0D-9A8C-9B8E43C3383B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D860E31C-4086-4D0D-9A8C-9B8E43C3383B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D860E31C-4086-4D0D-9A8C-9B8E43C3383B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F450D42B-7BC2-48B9-A762-A39234B33973}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F450D42B-7BC2-48B9-A762-A39234B33973}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F450D42B-7BC2-48B9-A762-A39234B33973}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F450D42B-7BC2-48B9-A762-A39234B33973}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BCD11EE-BC0A-40AF-A49E-3B686BF31AAF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BCD11EE-BC0A-40AF-A49E-3B686BF31AAF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BCD11EE-BC0A-40AF-A49E-3B686BF31AAF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BCD11EE-BC0A-40AF-A49E-3B686BF31AAF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B316318E-F8E4-4DB8-A7BD-9D3A5A06F4F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B316318E-F8E4-4DB8-A7BD-9D3A5A06F4F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B316318E-F8E4-4DB8-A7BD-9D3A5A06F4F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B316318E-F8E4-4DB8-A7BD-9D3A5A06F4F4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {62D8F398-C0F7-4B6A-884F-22CD9BFFB6C2}
+	EndGlobalSection
+EndGlobal

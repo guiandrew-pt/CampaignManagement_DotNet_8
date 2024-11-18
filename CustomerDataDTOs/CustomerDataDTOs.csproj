@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="DTOs\" />
+    <None Remove="Validation\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="DTOs\" />
+    <Folder Include="Validation\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CustomerDataEnum\CustomerDataEnum.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+</Project>

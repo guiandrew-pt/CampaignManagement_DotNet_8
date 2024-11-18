@@ -1,0 +1,102 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">Customer Data</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
+    <nav class="flex-column">
+        <!-- Home Link - Visible to Everyone -->
+        <div class="nav-item px-3">
+            <NavLink class="nav-link gap-2" href="" Match="NavLinkMatch.All">
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            </NavLink>
+        </div>
+
+        <!-- Campaigns Link - Visible Only to Authorized Users -->
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link d-flex align-items-center gap-2" href="campaigns">
+                        <span class="bi bi-megaphone align_icons_span" aria-hidden="true"></span> 
+                        <span>Campaigns</span>
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+        <!-- Customers Link - Visible Only to Authorized Users -->
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link d-flex align-items-center gap-2" href="customers">
+                        <span class="bi bi-person align_icons_span" aria-hidden="true"></span>
+                        <span>Customers</span>
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
+
+        <!-- Emails Link - Visible Only to Authorized Users -->
+        <AuthorizeView>
+            <Authorized>
+                <!-- Parent Emails NavLink -->
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link d-flex align-items-center gap-2" href="javascript:void(0)" @onclick="() => expandSubMenu = !expandSubMenu">
+                        <span class="bi bi-plus-lg align_icons_span" aria-hidden="true"></span>
+                        <span>Emails</span>
+                    </NavLink>
+                    @if (expandSubMenu)
+                    {
+                        <div class="nav flex-column">
+                            <div class="nav-item px-3 submenu">
+                                <!-- Emails List -->
+                                <NavLink class="expand-menu text_decoration_none d-flex align-items-center gap-2" href="emails">
+                                    <span class="bi bi-envelope align_icons_span" aria-hidden="true"></span>
+                                    <span>Emails List</span>
+                                </NavLink>
+                            </div>
+
+                            <!-- Search Emails -->
+                            @*<div class="nav-item px-3">
+                                <NavLink class="expand-menu text_decoration_none d-flex align-items-center gap-2" href="search-emails">
+                                    <span class="bi bi-search align_icons_span" aria-hidden="true"></span> Search Emails
+                                </NavLink>
+                            </div>*@
+
+                            <!-- Search Emails -->
+                            <div class="nav-item px-3 submenu">
+                                <NavLink class="expand-menu text_decoration_none d-flex align-items-center gap-2" href="search-emails-customer">
+                                    <span class="bi bi-search align_icons_span" aria-hidden="true"></span>
+                                    <span>Search Emails</span>
+                                </NavLink>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </Authorized>
+        </AuthorizeView>
+    </nav>
+</div>
+
+@code {
+    [Inject]
+    private NavigationManager? Navigation { get; set; }
+
+    [Inject]
+    private CustomAuthenticationStateProvider? AuthProvider { get; set; }
+
+    private bool collapseNavMenu = true;
+    private bool expandSubMenu;
+
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+}
+

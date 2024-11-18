@@ -1,0 +1,246 @@
+﻿@page "/edit-email/{id:int}"
+@using CustomerDataDTOs.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject CustomAuthenticationStateProvider AuthService
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <h3>Edit Email</h3>
+
+        <hr />
+
+        @if (isLoading)
+        {
+            <p class="text-danger">An error occurred while loading the email data. Please try again later.</p>
+        }
+        else if (email is not null)
+        {
+            <EditForm Model="email" OnValidSubmit="HandleValidSubmit" OnFieldChanged="ClearErrorMessage">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label for="RecipientEmail">Recipient:</label>
+                    <InputText id="RecipientEmail" class="form-control" @bind-Value="@email.RecipientEmail" />
+                    <ValidationMessage For="@(() => email.RecipientEmail)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="Subject">Subject:</label>
+                    <InputText id="Subject" class="form-control" @bind-Value="@email.Subject" />
+                    <ValidationMessage For="@(() => email.Subject)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="Content">Content:</label>
+                    <InputTextArea id="Content" class="form-control" @bind-Value="@email.Content" />
+                    <ValidationMessage For="@(() => email.Content)" />
+                </div>
+
+                <div class="form-group">
+                    <label for="SentDate">Sent Date:</label>
+                    <InputDate id="SentDate" class="form-control" @bind-Value="@email.SentDate" />
+                    <ValidationMessage For="@(() => email.SentDate)" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <!-- Status Dropdown -->
+                        <div class="form-group">
+                            <label for="Status">Status:</label>
+                            <InputSelect id="Status" class="form-select-lg" @bind-Value="@email.Status">
+                                <option value="">Select Status</option>
+                                <option value="Sent">Sent</option>
+                                <option value="Failed">Failed</option>
+                                <option value="Delivered">Delivered</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => email.Status)" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-4">
+                        <!-- Campaign Dropdown (required) -->
+                        @if (campaigns is not null && campaigns.Any())
+                        {
+                            <div class="form-group">
+                                <label for="CampaignId">Campaign:</label>
+                                <InputSelect id="CampaignId" class="form-select-lg" @bind-Value="@email.CampaignId">
+                                    <option value="0">Select Campaign (required)</option>
+                                    @foreach (var campaign in campaigns)
+                                    {
+                                        <option value="@campaign.Id">@campaign.CampaignName</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => email.CampaignId)" />
+                            </div>
+                        }
+                        else
+                        {
+                            <div>No campaigns available.</div>
+                        }
+                    </div>
+
+                    <div class="col-md-4">
+                        <!-- Customer Data Dropdown (optional) -->
+                        @if (customers is not null && customers.Any())
+                        {
+                            <div class="form-group">
+                                <label for="CustomerDataId">Customer:</label>
+                                <InputSelect id="CustomerDataId" class="form-select-lg" @bind-Value="@email.CustomerDataId">
+                                    <option value="-1">Select Customer (optional)</option>
+                                    <option value="0">None</option>
+                                    @foreach (var customer in customers)
+                                    {
+                                        <option value="@customer.Id">@customer.FullName</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => email.CustomerDataId)" />
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="form-group form-group-buttons">
+                    <button type="submit" class="btn btn-success" disabled="@(!string.IsNullOrEmpty(errorMessage))">Save</button>
+                    <button type="button" class="btn btn-secondary" @onclick="NavigateBack">Cancel</button>
+                </div>
+            </EditForm>
+        }
+        else
+        {
+            <p><em>Email not found.</em></p>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page. Please <NavLink href="/login">login</NavLink>.</p>
+        <p>If you don't have a register, please, do your registe first <NavLink href="/register">register</NavLink>.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private SendsEmailsDto? email = new SendsEmailsDto();
+    private List<CampaignDto> campaigns = new List<CampaignDto>(); // List to hold campaigns
+    private List<CustomerDto> customers = new List<CustomerDto>(); // List to hold customer data
+
+    private bool isLoading = true;
+
+    private string errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is not 0)
+        {
+            email = await Http.GetFromJsonAsync<SendsEmailsDto>($"api/SendsEmails/{Id}");
+
+            if (email is null)
+            {
+                errorMessage = "Email not found.";
+                NavigateBack();
+            }
+        }
+
+        await LoadCampaignAndCustomers(); // Load campaigns and customer data when the page loads
+        isLoading = false; // Once the email data is loaded, hide the loading message
+        StateHasChanged(); // Force UI update
+    }
+
+    // Fetch the list of campaigns from the API
+    private async Task LoadCampaignAndCustomers()
+    {
+        try
+        {
+            // Fetch campaigns (required)
+            HttpResponseMessage? responseCampaign = await Http.GetAsync("api/Campaign");
+            if (responseCampaign.IsSuccessStatusCode)
+            {
+                List<CampaignDto>? campaignsList = await responseCampaign.Content.ReadFromJsonAsync<List<CampaignDto>>();
+                if (campaignsList is not null)
+                {
+                    campaigns = campaignsList; // Set the list to use in the dropdown
+                }
+            }
+            else
+            {
+                errorMessage = "Failed to load campaigns.";
+            }
+
+            // Fetch customers (optional)
+            HttpResponseMessage? responseCustomer = await Http.GetAsync("api/CustomerData");
+            if (responseCustomer.IsSuccessStatusCode)
+            {
+                List<CustomerDto>? customerDatas = await responseCustomer.Content.ReadFromJsonAsync<List<CustomerDto>>();
+                if (customerDatas is not null)
+                {
+                    customers = customerDatas; // Set the list to use in the dropdown
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // Required: Check if no campaigns has been selected
+        if (!IsCampaignSelected())
+        {
+            errorMessage = "Please select a valid Campaign.";
+            return;
+        }
+
+        // Optional: Check if no customer has been selected
+        if (email is not null && !IsCustomerDataSelected())
+        {
+            email.CustomerDataId = null; // Set to null if no customer is selected
+        }
+
+        // Always perform PUT for edit
+        HttpResponseMessage response = await Http.PutAsJsonAsync($"api/SendsEmails/{Id}", email);
+
+        if (response.IsSuccessStatusCode)
+        {
+            ClearErrorMessage(); // Clear error message and navigate back after successful save
+            NavigateBack();
+        }
+        else
+        {
+            errorMessage = "Failed to save the email. Please check the data and try again.";
+            string? errorContent = await response.Content.ReadAsStringAsync();
+            // Optionally log the detailed error
+            // Console.WriteLine(errorContent);
+        }
+    }
+
+    private bool IsCampaignSelected()
+    {
+        return email?.CampaignId is not 0;
+    }
+
+    private bool IsCustomerDataSelected()
+    {
+        return email?.CustomerDataId is not 0;
+    }
+
+    private void ClearErrorMessage()
+    {
+        errorMessage = "";
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/emails");
+    }
+}
+

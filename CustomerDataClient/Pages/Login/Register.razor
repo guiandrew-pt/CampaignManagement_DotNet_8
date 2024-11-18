@@ -1,0 +1,121 @@
+﻿@page "/register"
+@using CustomerDataDTOs.DTOs
+@using CustomerDataClient.Models.ViewModels
+@using System.Text.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+
+<h3>Register</h3>
+
+<EditForm Model="registerModel" OnValidSubmit="HandleRegistration">
+    <DataAnnotationsValidator />
+
+    <div class="form-group">
+        <label for="Username">Username:</label>
+        <InputText id="Username" class="form-control" @bind-Value="registerModel.Username" />
+        <ValidationMessage For="@(() => registerModel.Username)" />
+    </div>
+    <div class="form-group">
+        <label for="Email">Email:</label>
+        <InputText id="Email" type="email" class="form-control" @bind-Value="registerModel.Email" />
+        <ValidationMessage For="@(() => registerModel.Email)" />
+    </div>
+    <div class="form-group">
+        <label for="FirstName">First Name:</label>
+        <InputText id="FirstName" class="form-control" @bind-Value="registerModel.FirstName" />
+        <ValidationMessage For="@(() => registerModel.FirstName)" />
+    </div>
+    <div class="form-group">
+        <label for="LastName">Last Name:</label>
+        <InputText id="LastName" class="form-control" @bind-Value="registerModel.LastName" />
+        <ValidationMessage For="@(() => registerModel.LastName)" />
+    </div>
+    <div class="form-group">
+        <label for="Password">Password:</label>
+        <InputText id="Password" type="password" class="form-control" @bind-Value="registerModel.Password" />
+        <ValidationMessage For="@(() => registerModel.Password)" />
+    </div>
+
+    <!-- Roles selection as checkboxes -->
+    <div class="form-group">
+        <label for="Roles">Roles:</label>
+        @foreach (RoleSelection? role in roleSelections)
+        {
+            <div class="form-check">
+                <InputCheckbox class="form-check-input" @bind-Value="role.IsSelected" />
+                <label class="form-check-label">@role.Name</label>
+            </div>
+        }
+        <ValidationMessage For="@(() => registerModel.Roles)" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Register</button>
+</EditForm>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">
+        @errorMessage
+    </div>
+}
+
+@code {
+    private UserRegisterUpdateDto registerModel = new UserRegisterUpdateDto();
+    private string? errorMessage;
+
+    // Use RoleSelection list to manage role selections
+    private List<RoleSelection> roleSelections = new List<RoleSelection>
+    {
+        new RoleSelection { Name = "User" },
+        new RoleSelection { Name = "Manager" },
+        new RoleSelection { Name = "Admin" }
+    };
+
+    private async Task HandleRegistration()
+    {
+        // Update registerModel.SelectedRoles with selected roles
+        registerModel.Roles = roleSelections
+            .Where(role => role.IsSelected)
+            .Select(role => role.Name)
+            .ToList();
+
+        // Debugging line to check roles
+        // Console.WriteLine("Selected Roles: " + string.Join(", ", registerModel.Roles));
+
+        try
+        {
+            HttpResponseMessage response = await Http.PostAsJsonAsync("api/auth/register", registerModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                Navigation.NavigateTo("/login");
+            }
+            else
+            {
+                string? errorContent = await response.Content.ReadAsStringAsync();
+
+                if (errorContent == "EmailConflict")
+                {
+                    errorMessage = "A user with this email already exists. Please use a different email.";
+                }
+                else if (errorContent == "UsernameConflict")
+                {
+                    errorMessage = "A user with this username already exists. Please choose another username.";
+                }
+                else
+                {
+                    errorMessage = "There was a conflict with the data. Please review and try again.";
+                }
+
+                // Console.WriteLine($"Error: {errorContent}"); // Log for debugging purposes
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred: {ex.Message}";
+        }
+
+    }
+}
+

@@ -1,0 +1,139 @@
+﻿@page "/campaigns"
+@using CustomerDataDTOs.DTOs
+@using System.Text.Json
+@inject HttpClient Http
+@inject CustomAuthenticationStateProvider AuthService
+
+<AuthorizeView>
+    <Authorized>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>Campaigns</h3>
+
+            <NavLink class="btn btn-outline-primary" href="new-campaign">
+                <span class="oi oi-plus" aria-hidden="true">Add New Campaign</span>
+            </NavLink>
+        </div>
+
+        @if (isLoading)
+        {
+            <p class="text-danger">An error occurred while loading campaigns. Please try again later.</p>
+        }
+        else if (campaigns is not null && campaigns.Any())
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Status</th>
+                        <th>Created By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (CampaignDto? campaign in campaigns)
+                    {
+                        <tr>
+                            <td>@campaign.CampaignName</td>
+                            <td>@campaign.Description</td>
+                            <td>@campaign.StartDate.ToString("MM/dd/yyyy")</td>
+                            <td>@campaign.EndDate.ToString("MM/dd/yyyy")</td>
+                            <td>@(campaign.IsActive ? "Active" : "Inactive")</td>
+                            <td>@(campaign.CreatedByUser?.FullName ?? "N/A") (@(campaign.CreatedByUser?.Email ?? "N/A"))</td>
+                            <td>
+                                <button class="btn btn-primary" @onclick="() => NavigateToEdit(campaign.Id)">Edit</button>
+                                <button class="btn btn-danger" @onclick="() => DeleteCampaign(campaign.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p><em>No campaigns available.</em></p>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page. Please <NavLink href="/login">login</NavLink>.</p>
+        <p>If you don't have a register, please, do your registe first <NavLink href="/register">register</NavLink>.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    private List<CampaignDto>? campaigns;
+
+    private string errorMessage = "";
+
+    private bool isLoading = true;
+
+    [Inject]
+    private NavigationManager? NavigationManager { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCampaigns();
+    }
+
+    protected async Task LoadCampaigns()
+    {
+        isLoading = true;
+
+        try
+        {
+            HttpResponseMessage response = await Http.GetAsync("api/Campaign");
+
+            if (response.IsSuccessStatusCode)
+            {
+                //string jsonResponse = await response.Content.ReadAsStringAsync();
+                //Console.WriteLine("API Response JSON: " + jsonResponse); // Only to test
+                //Console.WriteLine("||||||||||||||||||||||||||");
+
+                // Deserialize if success
+                campaigns = await response.Content.ReadFromJsonAsync<List<CampaignDto>>();
+            }
+            else
+            {
+                // Log the error response and set the error flag
+                string? content = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Error: {response.StatusCode}, Content: {content}";
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Request error: {ex.Message}";
+            // Optionally, we could set a flag to display an error message to the user
+        }
+        catch (JsonException ex)
+        {
+            errorMessage = $"JSON parsing error: {ex.Message}";
+            // Handle cases where the API does not return valid JSON
+        }
+        finally
+        {
+            isLoading = false; // Set the flag to display an error message
+        }
+    }
+
+    private void NavigateToEdit(int campaignId)
+    {
+        // Navigate to the edit page for the selected campaign
+        NavigationManager?.NavigateTo($"/edit-campaign/{campaignId}");
+    }
+
+    private void DeleteCampaign(int campaignId)
+    {
+        // Navigate to the delete page for the selected campaign
+        NavigationManager?.NavigateTo($"/delete-campaign/{campaignId}");
+    }
+}
+

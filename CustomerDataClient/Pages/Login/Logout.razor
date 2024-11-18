@@ -1,0 +1,55 @@
+﻿@inject HttpClient Http
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+@inject NavigationManager Navigation
+@inject CustomAuthenticationStateProvider AuthStateProvider
+
+<button @onclick="LogoutAsync">Logout</button>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">
+        <p>@errorMessage</p>
+    </div>
+}
+
+@code {
+    private string? errorMessage;
+
+    private async Task LogoutAsync()
+    {
+        try
+        {
+            // Get the JWT token from local storage
+            string? token = await LocalStorage.GetItemAsync<string>("authToken");
+
+            if (!string.IsNullOrEmpty(token))
+            {
+                // Add Authorization header with the token for the logout request
+                Http.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                // Call the API to revoke the token
+                HttpResponseMessage? response = await Http.PostAsync("api/auth/logout", null);
+
+                if (response.IsSuccessStatusCode)
+                {
+                    // Use the AuthenticationStateProvider to mark the user as logged out
+                    await AuthStateProvider.MarkUserAsLoggedOut();
+
+                    // Redirect the user to the login page or another public page
+                    Navigation.NavigateTo("/login");
+                }
+                else
+                {
+                    // Console.WriteLine("Failed to log out. Server response: " + response.ReasonPhrase);
+                    errorMessage = $"Failed to log out. Server response: {response.ReasonPhrase}";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // Console.WriteLine("Error during logout: " + ex.Message);
+            errorMessage = $"Error during logout: {ex.Message}";
+        }
+    }
+}
+

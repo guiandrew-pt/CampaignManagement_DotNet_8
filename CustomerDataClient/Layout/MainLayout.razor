@@ -1,0 +1,53 @@
+﻿@inherits LayoutComponentBase
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            @*<a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>*@
+            <a class="btn btn-link" @onclick="NavigateToAbout">About</a>
+
+            <!-- Show welcome message only if user is authenticated -->
+            <AuthorizeView>
+                <Authorized>
+                    @* Retrieve and display the authenticated user's name *@
+                    <span class="btn-link">Welcome back, @context.User.Identity?.Name!</span>
+                    <button class="btn btn-link" @onclick="Logout">Logout</button>
+                </Authorized>
+                <NotAuthorized>
+                    <button class="btn btn-link" @onclick="NavigateToLogin">Login</button>
+                </NotAuthorized>
+            </AuthorizeView>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    [Inject]
+    private NavigationManager? Navigation { get; set; }
+
+    [Inject]
+    private CustomAuthenticationStateProvider? AuthProvider { get; set; }
+
+    private async Task Logout()
+    {
+        if (AuthProvider is not null)
+            await AuthProvider.LogoutAsync();
+    }
+
+    private void NavigateToLogin()
+    {
+        Navigation?.NavigateTo("login");
+    }
+
+    private void NavigateToAbout()
+    {
+        Navigation?.NavigateTo("about");
+    }
+}

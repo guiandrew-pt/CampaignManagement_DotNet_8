@@ -1,0 +1,59 @@
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' ">
+    <ExternalConsole>true</ExternalConsole>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' ">
+    <ExternalConsole>true</ExternalConsole>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.8" PrivateAssets="all" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Authentication" Version="8.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.10" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Models\" />
+    <None Remove="Pages\CampaignManager\" />
+    <None Remove="Models\Validation\" />
+    <None Remove="Pages\CustomerData\" />
+    <None Remove="Pages\SendsEmails\" />
+    <None Remove="Provider\" />
+    <None Remove="Pages\Login\" />
+    <None Remove="Handler\" />
+    <None Remove="Models\ViewModels\" />
+    <None Remove="Utils\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Models\" />
+    <Folder Include="Pages\CampaignManager\" />
+    <Folder Include="Models\Validation\" />
+    <Folder Include="Pages\CustomerData\" />
+    <Folder Include="Pages\SendsEmails\" />
+    <Folder Include="Provider\" />
+    <Folder Include="Pages\Login\" />
+    <Folder Include="Handler\" />
+    <Folder Include="Models\ViewModels\" />
+    <Folder Include="Utils\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CustomerDataDTOs\CustomerDataDTOs.csproj">
+      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
+    </ProjectReference>
+  </ItemGroup>
+</Project>

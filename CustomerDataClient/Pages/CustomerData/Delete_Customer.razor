@@ -1,0 +1,114 @@
+﻿@page "/delete-customer/{id:int}"
+@using CustomerDataDTOs.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject CustomAuthenticationStateProvider AuthService
+
+<AuthorizeView>
+    <Authorized>
+        <h3>Delete Customer</h3>
+
+        <hr />
+
+        @if (isLoading)
+        {
+            <p class="text-danger">An error occurred while loading the customer data. Please try again later.</p>
+        }
+        else if (customer is not null)
+        {
+            <div class="form-group">
+                <label for="FirstName">First Name:</label>
+                <p id="FirstName">@customer.FirstName</p>
+            </div>
+
+            <div class="form-group">
+                <label for="LastName">Last Name:</label>
+                <p id="LastName">@customer.LastName</p>
+            </div>
+
+            <div class="form-group">
+                <label for="Email">Email:</label>
+                <p id="Email">@customer.Email</p>
+            </div>
+
+            <div class="form-group">
+                <label for="Phone">Phone:</label>
+                <p id="Phone">@customer.Phone</p>
+            </div>
+
+            <div class="form-group">
+                <label for="DateOfBirth">Date Of Birth:</label>
+                <p id="DateOfBirth">@customer.DateOfBirth.ToShortDateString()</p>
+            </div>
+
+            <button class="btn btn-danger" style="margin-top: 5px" @onclick="HandleDelete">Delete</button>
+            <button type="button" class="btn btn-secondary" style="margin-top: 5px" @onclick="NavigateBack">Cancel</button>
+        }
+        else
+        {
+            <p><em>Customer not found.</em></p>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page. Please <NavLink href="/login">login</NavLink>.</p>
+        <p>If you don't have a register, please, do your registe first <NavLink href="/register">register</NavLink>.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private CustomerDto? customer = new CustomerDto();
+
+    private string errorMessage = "";
+
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is not 0)
+        {
+            customer = await Http.GetFromJsonAsync<CustomerDto>($"api/CustomerData/{Id}");
+
+            if (customer is null)
+            {
+                errorMessage = "Customer not found.";
+                NavigateBack();
+            }
+        }
+
+        isLoading = false; // Once the customer data is loaded, hide the loading message
+    }
+
+    private async Task HandleDelete()
+    {
+        //  Delete the customer
+        HttpResponseMessage? response = await Http.DeleteAsync($"api/CustomerData/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            errorMessage = ""; // Clear error message
+            NavigateBack();
+        }
+        else
+        {
+            errorMessage = "Failed to delete the cutomer. Please try again.";
+            string? errorContent = await response.Content.ReadAsStringAsync();
+            // Console.WriteLine(errorContent); // Optionally log the detailed error
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/customers");
+    }
+}
+

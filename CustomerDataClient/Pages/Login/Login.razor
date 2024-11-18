@@ -1,0 +1,80 @@
+﻿@page "/login"
+@using CustomerDataDTOs.DTOs
+@inject CustomAuthenticationStateProvider CustomAuthStateProvider
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject Blazored.LocalStorage.ILocalStorageService LocalStorage
+
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <div>
+        <label>Username or Email</label>
+        <InputText @bind-Value="loginModel.UsernameOrEmail" class="form-control" />
+    </div>
+    <div>
+        <label>Password</label>
+        <InputText @bind-Value="loginModel.Password" type="password" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Login</button>
+</EditForm>
+
+<p>If you don't have a register, please, do your register first <NavLink href="/register">register</NavLink>.</p>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">
+        <p>@errorMessage</p>
+    </div>
+}
+
+@code {
+    private UserLoginDto loginModel = new UserLoginDto();
+    private string? errorMessage;
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            HttpResponseMessage response = await Http.PostAsJsonAsync("api/auth", loginModel);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var loginResult = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+
+                // Check if loginResult or token is null
+                if (loginResult is not null && loginResult.TryGetValue("token", out string? token) && !string.IsNullOrEmpty(token))
+                {
+                    // Store the token in local storage
+                    await LocalStorage.SetItemAsync("authToken", token);
+
+                    // Mark the user as authenticated in the state provider
+                    await CustomAuthStateProvider.MarkUserAsAuthenticated(token);
+
+                    // Navigate to home page after successful login
+                    Navigation.NavigateTo("/");
+                }
+                else
+                {
+                    errorMessage = "Failed to retrieve authentication token. Please try again.";
+                }
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                errorMessage = "Invalid username, email, or password. Please try again.";
+            }
+            else
+            {
+                errorMessage = "An unexpected error occurred. Please try again.";
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"There was a problem communicating with the server. Please try again later. {ex.Message}";
+            // Console.WriteLine($"Error: {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An unexpected error occurred. Please try again later. {ex.Message}";
+            // Console.WriteLine($"Unexpected Error: {ex.Message}");
+        }
+    }
+}

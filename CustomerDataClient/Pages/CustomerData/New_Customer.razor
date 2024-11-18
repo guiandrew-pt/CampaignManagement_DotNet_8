@@ -1,0 +1,107 @@
+﻿@page "/new-customer"
+@using CustomerDataDTOs.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject CustomAuthenticationStateProvider AuthService
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <h3>Add New Customer</h3>
+
+        <hr />
+
+        <EditForm Model="@customer" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+
+            <div class="form-group">
+                <label for="FirstName">First Name:</label>
+                <InputText id="FirstName" class="form-control" @bind-Value="@customer.FirstName" />
+                <ValidationMessage For="@(() => customer.FirstName)" />
+            </div>
+            <div class="form-group">
+                <label for="LastName">Last Name:</label>
+                <InputText id="LastName" class="form-control" @bind-Value="@customer.LastName" />
+                <ValidationMessage For="@(() => customer.LastName)" />
+            </div>
+            <div class="form-group">
+                <label for="Email">Email:</label>
+                <InputText id="Email" class="form-control" @bind-Value="@customer.Email" />
+                <ValidationMessage For="@(() => customer.Email)" />
+            </div>
+            <div class="form-group">
+                <label for="Phone">Phone Number:</label>
+                <InputText id="Phone" class="form-control" @bind-Value="@customer.Phone" placeholder="(123) 456-7890" />
+                <ValidationMessage For="@(() => customer.Phone)" />
+            </div>
+            <div class="form-group">
+                <label for="DateOfBirth">Date Of Birth:</label>
+                <InputDate id="DateOfBirth" class="form-control" @bind-Value="@customer.DateOfBirth" />
+                <ValidationMessage For="@(() => customer.DateOfBirth)" />
+            </div>
+
+            <button type="submit" class="btn btn-success" style="margin-top: 5px">Save</button>
+            <button type="button" class="btn btn-secondary" style="margin-top: 5px" @onclick="NavigateBack">Cancel</button>
+        </EditForm>
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page. Please <NavLink href="/login">login</NavLink>.</p>
+        <p>If you don't have a register, please, do your registe first <NavLink href="/register">register</NavLink>.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    private CustomerDto customer = new CustomerDto();
+
+    private string errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Initialize with a specific date: January 1, 2006
+        customer.DateOfBirth = new DateTime(2006, 1, 1);
+
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        HttpResponseMessage response = await Http.PostAsJsonAsync("api/CustomerData", customer);
+
+        if (response.IsSuccessStatusCode)
+        {
+            errorMessage = ""; // Clear error message and navigate back after successful save
+            NavigateBack();
+        }
+        else
+        {
+            string? errorContent = await response.Content.ReadAsStringAsync();
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                errorMessage = "A customer with this email already exists. Please use a different email.";
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                errorMessage = "There was an issue with the provided data. Please review and try again.";
+            }
+            else
+            {
+                errorMessage = "Failed to save the customer. Please try again later.";
+            }
+
+            // Console.WriteLine($"Error: {errorContent}"); // Log for debugging purposes
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/customers"); // Navigate back to the customers list
+    }
+}
+

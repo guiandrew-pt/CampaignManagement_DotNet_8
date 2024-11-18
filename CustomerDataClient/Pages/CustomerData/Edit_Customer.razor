@@ -1,0 +1,135 @@
+﻿@page "/edit-customer/{id:int}"
+@using CustomerDataDTOs.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject CustomAuthenticationStateProvider AuthService
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <h3>Edit Customer</h3>
+
+        <hr />
+
+        @if (isLoading)
+        {
+            <p class="text-danger">An error occurred while loading the customer data. Please try again later.</p>
+        }
+        else if (customer is not null)
+        {
+            <EditForm Model="@customer" OnValidSubmit="HandleValidSubmit">
+                <DataAnnotationsValidator />
+
+                <div class="form-group">
+                    <label for="FirstName">First Name:</label>
+                    <InputText id="FirstName" class="form-control" @bind-Value="@customer.FirstName" />
+                    <ValidationMessage For="@(() => customer.FirstName)" />
+                </div>
+                <div class="form-group">
+                    <label for="LastName">Last Name:</label>
+                    <InputText id="LastName" class="form-control" @bind-Value="@customer.LastName" />
+                    <ValidationMessage For="@(() => customer.LastName)" />
+                </div>
+                <div class="form-group">
+                    <label for="Email">Email:</label>
+                    <InputText id="Email" class="form-control" @bind-Value="@customer.Email" />
+                    <ValidationMessage For="@(() => customer.Email)" />
+                </div>
+                <div class="form-group">
+                    <label for="Phone">Phone Number:</label>
+                    <InputText id="Phone" class="form-control" @bind-Value="@customer.Phone" placeholder="(123) 456-7890" />
+                    <ValidationMessage For="@(() => customer.Phone)" />
+                </div>
+                <div class="form-group">
+                    <label for="DateOfBirth">Date Of Birth:</label>
+                    <InputDate id="DateOfBirth" class="form-control" @bind-Value="@customer.DateOfBirth" />
+                    <ValidationMessage For="@(() => customer.DateOfBirth)" />
+                </div>
+
+                <button type="submit" class="btn btn-success" style="margin-top: 5px">Save</button>
+                <button type="button" class="btn btn-secondary" style="margin-top: 5px" @onclick="NavigateBack">Cancel</button>
+            </EditForm>
+        }
+        else
+        {
+            <p><em>Customer not found.</em></p>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page. Please <NavLink href="/login">login</NavLink>.</p>
+        <p>If you don't have a register, please, do your registe first <NavLink href="/register">register</NavLink>.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private CustomerDto? customer = new CustomerDto();
+
+    private bool isLoading = true;
+
+    private string errorMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is not 0)
+        {
+            customer = await Http.GetFromJsonAsync<CustomerDto>($"api/CustomerData/{Id}");
+
+            if (customer is null)
+            {
+                errorMessage = "Customer not found.";
+                NavigateBack();
+            }
+        }
+
+        isLoading = false; // Once the customer data is loaded, hide the loading message
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        HttpResponseMessage response = await Http.PutAsJsonAsync($"api/CustomerData/{Id}", customer);
+
+        if (response.IsSuccessStatusCode)
+        {
+            errorMessage = ""; // Clear error message
+            NavigateBack();
+        }
+        else
+        {
+            string? errorContent = await response.Content.ReadAsStringAsync();
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                errorMessage = "This email is already associated with another customer. Please use a different email.";
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
+            {
+                errorMessage = "Invalid data provided. Please check the input and try again.";
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                errorMessage = $"Customer with ID {Id} not found.";
+            }
+            else
+            {
+                errorMessage = "An unexpected error occurred while saving the customer data. Please try again.";
+            }
+
+            // Console.WriteLine($"Error details: {errorContent}"); // Optionally log detailed error for debugging
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/customers");
+    }
+}
+

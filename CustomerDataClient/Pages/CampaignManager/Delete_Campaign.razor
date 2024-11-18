@@ -1,0 +1,114 @@
+﻿@page "/delete-campaign/{id:int}"
+@using CustomerDataDTOs.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject CustomAuthenticationStateProvider AuthService
+
+<AuthorizeView>
+    <Authorized>
+        <h3>Delete Campaign</h3>
+
+        <hr />
+
+        @if (isLoading)
+        {
+            <p class="text-danger">An error occurred while loading the campaign data. Please try again later.</p>
+        }
+        else if (campaign is not null)
+        {
+            <div class="form-group">
+                <label for="CampaignName">Campaign Name:</label>
+                <p id="CampaignName">@campaign.CampaignName</p>
+            </div>
+
+            <div class="form-group">
+                <label for="Description">Description:</label>
+                <p id="Description">@campaign.Description</p>
+            </div>
+
+            <div class="form-group">
+                <label for="StartDate">Start Date:</label>
+                <p id="StartDate">@campaign.StartDate.ToShortDateString()</p>
+            </div>
+
+            <div class="form-group">
+                <label for="EndDate">End Date:</label>
+                <p id="EndDate">@campaign.EndDate.ToShortDateString()</p>
+            </div>
+
+            <div class="form-check">
+                <label for="IsActive">Is Active</label>
+                <input id="IsActive" class="form-check-input" type="checkbox" checked="@campaign.IsActive" disabled />
+            </div>
+
+            <button class="btn btn-danger" style="margin-top: 5px" @onclick="HandleDelete">Delete</button>
+            <button type="button" class="btn btn-secondary" style="margin-top: 5px" @onclick="NavigateBack">Cancel</button>
+        }
+        else
+        {
+            <p><em>Campaign not found.</em></p>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page. Please <NavLink href="/login">login</NavLink>.</p>
+        <p>If you don't have a register, please, do your registe first <NavLink href="/register">register</NavLink>.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private CampaignDto? campaign = new CampaignDto();
+
+    private string errorMessage = "";
+
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id is not 0)
+        {
+            campaign = await Http.GetFromJsonAsync<CampaignDto>($"api/Campaign/{Id}");
+
+            if (campaign is null)
+            {
+                errorMessage = "Campaign not found.";
+                NavigateBack();
+            }
+        }
+
+        isLoading = false; // Once the campaign data is loaded, hide the loading message
+    }
+
+    private async Task HandleDelete()
+    {
+        // Delete the campaign
+        HttpResponseMessage? response = await Http.DeleteAsync($"api/Campaign/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            errorMessage = ""; // Clear error message
+            NavigateBack();
+        }
+        else
+        {
+            errorMessage = "Failed to delete the campaign. Please try again.";
+            string? errorContent = await response.Content.ReadAsStringAsync();
+            // Console.WriteLine(errorContent); // Optionally log the detailed error
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/campaigns");
+    }
+}
+

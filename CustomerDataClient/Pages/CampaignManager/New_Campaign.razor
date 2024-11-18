@@ -1,0 +1,141 @@
+﻿@page "/new-campaign"
+@using CustomerDataDTOs.DTOs
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject CustomAuthenticationStateProvider AuthService
+
+<AuthorizeView Context="authContext">
+    <Authorized>
+        <h3>Add New Campaign</h3>
+
+        <hr />
+
+        <EditForm Model="campaign" OnValidSubmit="HandleValidSubmit">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger" />
+
+            <div class="form-group">
+                <label for="CampaignName">Campaign Name:</label>
+                <InputText id="CampaignName" class="form-control" @bind-Value="@campaign.CampaignName" />
+                <ValidationMessage For="@(() => campaign.CampaignName)" />
+            </div>
+
+            <div class="form-group">
+                <label for="Description">Description:</label>
+                <InputText id="Description" class="form-control" @bind-Value="@campaign.Description" />
+                <ValidationMessage For="@(() => campaign.Description)" />
+            </div>
+
+            <div class="form-group">
+                <label for="StartDate">Start Date:</label>
+                <InputDate id="StartDate" class="form-control" @bind-Value="@campaign.StartDate" />
+                <ValidationMessage For="@(() => campaign.StartDate)" />
+            </div>
+
+            <div class="form-group">
+                <label for="EndDate">End Date:</label>
+                <InputDate id="EndDate" class="form-control" @bind-Value="@campaign.EndDate" />
+                <ValidationMessage For="@(() => campaign.EndDate)" />
+            </div>
+
+            <div class="form-check">
+                <label for="IsActive">Is Active</label>
+                <InputCheckbox id="IsActive" class="form-check-input" @bind-Value="@campaign.IsActive" />
+                <ValidationMessage For="@(() => campaign.IsActive)" />
+            </div>
+
+            @*<div class="form-group"> For security and data integrity, it’s best to set the campaign's creator as the logged-in user, rather than allowing a selection from all users.
+            <label for="CreatedByUserId">Created By:</label>
+            <InputSelect id="CreatedByUserId" class="form-select-lg" @bind-Value="campaign.CreatedByUserId">
+                <option value="">Select User</option>
+                @foreach (var user in users)
+                {
+                    <option value="@user.Id">@user.FullName</option>
+                }
+            </InputSelect>
+            <ValidationMessage For="@(() => campaign.CreatedByUserId)" />
+        </div>*@
+
+            <button type="submit" class="btn btn-success" style="margin-top: 5px">Save</button>
+            <button type="button" class="btn btn-secondary" style="margin-top: 5px" @onclick="NavigateBack">Cancel</button>
+        </EditForm>
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page. Please <NavLink href="/login">login</NavLink>.</p>
+        <p>If you don't have a register, please, do your registe first <NavLink href="/register">register</NavLink>.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    private CampaignDto campaign = new CampaignDto();
+    // private List<UserDto> users = new List<UserDto>(); // List of users for the dropdown // For security and data integrity, it’s best to set the campaign's creator as the logged-in user, rather than allowing a selection from all users.
+
+    private string errorMessage = "";
+
+    //protected override async Task OnInitializedAsync()
+    //{
+    //    await LoadUsers();
+    //}
+
+    //private async Task LoadUsers() // This is only for the dropdow
+    //{
+    //    try
+    //    {
+    //        // Fetch list of users to populate dropdown
+    //        HttpResponseMessage response = await Http.GetAsync("api/Auth/Users");
+    //        if (response.IsSuccessStatusCode)
+    //        {
+    //            users = await response.Content.ReadFromJsonAsync<List<UserDto>>() ?? new List<UserDto>();
+    //        }
+    //        else
+    //        {
+    //            errorMessage = "Failed to load users. Please try again.";
+    //        }
+    //    }
+    //    catch (Exception ex)
+    //    {
+    //        errorMessage = $"Error loading users: {ex.Message}";
+    //    }
+    //}
+
+    protected override async Task OnInitializedAsync()
+    {
+        campaign.StartDate = DateTime.UtcNow; // Initiate with the date utc now
+        campaign.EndDate = DateTime.UtcNow; // Initiate with the date utc now
+
+        // Optionally await other async operations here if needed
+        await Task.CompletedTask;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        // Post the new campaign to the API
+        HttpResponseMessage? response = await Http.PostAsJsonAsync("api/Campaign", campaign);
+
+        if (response.IsSuccessStatusCode)
+        {
+            errorMessage = ""; // Clear error message and navigate back after successful save
+            NavigateBack();
+        }
+        else
+        {
+            errorMessage = "Failed to save the campaign. Please check the data and try again.";
+            string? errorContent = await response.Content.ReadAsStringAsync();
+            // Optionally log the detailed error
+            // Console.WriteLine(errorContent);
+        }
+    }
+
+    private void NavigateBack()
+    {
+        Navigation.NavigateTo("/campaigns"); // Navigate back to the campaign list
+    }
+}
+

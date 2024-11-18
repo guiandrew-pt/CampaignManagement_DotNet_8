@@ -1,0 +1,192 @@
+﻿@*@page "/search-emails"
+@using CustomerDataDTOs.DTOs
+@using CustomerDataClient.Models.Validation
+@using System.Text.Json
+@inject HttpClient Http
+@inject CustomAuthenticationStateProvider AuthService*@
+
+<!--<AuthorizeView>
+    <Authorized>
+        <NavLink class="nav-link" href="new-email">
+            <span class="oi oi-plus" aria-hidden="true">Add New Email</span>
+        </NavLink>
+
+        <h3>Search Emails By Date Range</h3>
+
+        <div class="form-group">
+            <label for="minDate">Start Date (minDate):</label>
+            <InputDate id="minDate" @bind-Value="minDate" class="form-control" />
+        </div>
+
+        <div class="form-group">
+            <label for="maxDate">End Date (maxDate):</label>
+            <InputDate id="maxDate" @bind-Value="maxDate" class="form-control" />
+        </div>
+
+        <button class="btn btn-primary" @onclick="SearchEmails">Search</button>
+
+        <hr />-->
+        @*@if (isLoading)
+            {
+                <p class="text-danger">An error occurred while loading emails. Please try again later.</p>
+            }*@
+        @*else if (emails != null && emails.Any())*@
+        <!--{-->
+        @*<table class="table">*@
+        <!--<thead>
+            <tr>
+                <th>Recipient</th>
+                <th>Subject</th>
+                <th>Content</th>
+                <th>Sent Date</th>
+                <th>Status</th>
+                <th>Campaign</th>
+                <th>Customer</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>-->
+        @*@foreach (SendsEmailsDto? email in emails)*@
+        <!--{-->
+        @*<tr>*@
+        <!--<td>@email.RecipientEmail</td>
+        <td>@email.Subject</td>
+        <td>@email.Content</td>
+        <td>@email.SentDate.ToString("MM/dd/yyyy")</td>
+        <td>@email.Status.ToString()</td>-->
+        <!-- Display Campaign.Name -->
+        <!--<td>@(email.CampaignName ?? "N/A")</td>-->
+        <!-- Display CustomerData.Name -->
+        <!--<td>@(email.CustomerDataName ?? "N/A")</td>
+                        <td style="padding-right: 5px;">
+                            <button class="btn btn-primary" @onclick="() => NavigateToEdit(email.Id)">Edit</button>
+                            <button class="btn btn-danger" @onclick="() => DeleteCampaign(email.Id)">Delete</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>-->
+        <!-- Pagination Controls -->
+        <!--<div class="pagination">
+                <button class="btn btn-secondary" @onclick="PreviousPage" disabled="@(!CanGoBack)">Previous</button>
+                <button class="btn btn-secondary" @onclick="NextPage" disabled="@(!CanGoNext)">Next</button>
+                <p>Page @pageNumber of @totalPages (Total Records: @totalRecords)</p>
+            </div>
+        }
+        else
+        {
+            <p><em>No emails found.</em></p>
+        }-->
+
+        @*@if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="alert alert-danger" role="alert">
+                @errorMessage
+            </div>
+        }
+</Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page. Please <NavLink href="/login">login</NavLink>.</p>
+        <p>If you don't have a register, please, do your registe first <NavLink href="/register">register</NavLink>.</p>
+    </NotAuthorized>
+</AuthorizeView>*@
+
+@*@code {
+    private List<SendsEmailsDto>? emails;
+
+    private DateTime? minDate;
+    private DateTime? maxDate;
+
+    private int pageNumber = 1;
+    private int pageSize = 10;
+    private int totalRecords; // To hold the total number of emails
+    private int totalPages;
+
+    private string errorMessage = "";
+
+    private bool isLoading = true;
+
+    [Inject]
+    private NavigationManager? NavigationManager { get; set; }
+
+    protected async Task SearchEmails()
+    {
+        await LoadEmails();
+    }
+
+    private async Task LoadEmails()
+    {
+        isLoading = true;
+
+        try
+        {
+            HttpResponseMessage response = await Http.GetAsync($"api/SendsEmails/filterByData?minDate={minDate:yyyy-MM-dd}&maxDate={maxDate:yyyy-MM-dd}&pageNumber={pageNumber}&pageSize={pageSize}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Deserialize if success
+                PaginatedResponse<SendsEmailsDto>? result = await response.Content.ReadFromJsonAsync<PaginatedResponse<SendsEmailsDto>>();
+
+                if (result is not null)
+                {
+                    emails = result.Data;
+                    totalRecords = result.TotalRecords; // Store total records
+                    totalPages = (int)Math.Ceiling(result.TotalRecords / (double)pageSize); // Calculate total pages
+                }
+            }
+            else
+            {
+                // Log the error response
+                string? content = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Error: {response.StatusCode}, Content: {content}";
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Request error: {ex.Message}";
+            // Optionally, we could set a flag to display an error message to the user
+        }
+        catch (JsonException ex)
+        {
+            errorMessage = $"JSON parsing error: {ex.Message}";
+            // Handle cases where the API does not return valid JSON
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private bool CanGoBack => pageNumber > 1;
+    private bool CanGoNext => pageNumber < totalPages;
+
+    private async Task PreviousPage()
+    {
+        if (CanGoBack)
+        {
+            pageNumber--;
+            await LoadEmails();
+        }
+    }
+
+    private async Task NextPage()
+    {
+        if (CanGoNext)
+        {
+            pageNumber++;
+            await LoadEmails();
+        }
+    }
+
+    private void NavigateToEdit(int emailId)
+    {
+        // Navigate to the edit page for the selected email
+        NavigationManager?.NavigateTo($"/edit-email/{emailId}");
+    }
+
+    private void DeleteCampaign(int emailId)
+    {
+        // Navigate to the delete page for the selected email
+        NavigationManager?.NavigateTo($"/delete-email/{emailId}");
+    }
+}*@

@@ -1,0 +1,132 @@
+﻿@page "/customers"
+@using CustomerDataDTOs.DTOs
+@using System.Text.Json
+@inject HttpClient Http
+@inject CustomAuthenticationStateProvider AuthService
+
+<AuthorizeView>
+    <Authorized>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3>Customers</h3>
+
+            <NavLink class="btn btn-outline-primary" href="new-customer">
+                <span class="oi oi-plus" aria-hidden="true">Add New Customer</span>
+            </NavLink>
+        </div>
+
+        @if (isLoading)
+        {
+            <p class="text-danger">An error occurred while loading customers. Please try again later.</p>
+        }
+        else if (customers is not null && customers.Any())
+        {
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Date of Birth</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (CustomerDto? customer in customers)
+                    {
+                        <tr>
+                            <td>@customer.FullName</td>
+                            <td>@customer.Email</td>
+                            <td>@customer.Phone</td>
+                            <td>@customer.DateOfBirth.ToString("MM/dd/yyyy")</td>
+                            <td>
+                                <button class="btn btn-primary" @onclick="() => NavigateToEdit(customer.Id)">Edit</button>
+                                <button class="btn btn-danger" @onclick="() => DeleteCustomer(customer.Id)">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p><em>No customers found.</em></p>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <p>You are not authorized to view this page. Please <NavLink href="/login">login</NavLink>.</p>
+        <p>If you don't have a register, please, do your registe first <NavLink href="/register">register</NavLink>.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger" role="alert">
+        @errorMessage
+    </div>
+}
+
+@code {
+    private List<CustomerDto>? customers;
+
+    private bool isLoading = true;
+
+    private string errorMessage = "";
+
+    [Inject]
+    private NavigationManager? NavigationManager { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCustomers();
+    }
+
+    private async Task LoadCustomers()
+    {
+        isLoading = true;
+
+        try
+        {
+            HttpResponseMessage response = await Http.GetAsync("api/CustomerData");
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Deserialize if success
+                customers = await response.Content.ReadFromJsonAsync<List<CustomerDto>>();
+            }
+            else
+            {
+                // Log the error response
+                string? content = await response.Content.ReadAsStringAsync();
+                errorMessage = $"Error: {response.StatusCode}, Content: {content}";
+                // Console.WriteLine($"Error: {response.StatusCode}, Content: {content}");
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            errorMessage = $"Request error: {ex.Message}";
+            // Optionally, we could set a flag to display an error message to the user
+        }
+        catch (JsonException ex)
+        {
+            errorMessage = $"JSON parsing error: {ex.Message}";
+            // Handle cases where the API does not return valid JSON
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void NavigateToEdit(int customerId)
+    {
+        // Navigate to the edit page for the selected customer
+        NavigationManager?.NavigateTo($"/edit-customer/{customerId}");
+    }
+
+    private void DeleteCustomer(int customerId)
+    {
+        // Navigate to the delete page for the selected customer
+        NavigationManager?.NavigateTo($"/delete-customer/{customerId}");
+    }
+}
+
